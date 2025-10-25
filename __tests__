@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "babel-preset-expo": "^latest"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}

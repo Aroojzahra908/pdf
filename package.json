@@ -1,7 +1,7 @@
 {
   "name": "smart-pdf",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -9,13 +9,42 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/slider": "^5.0.1",
     "expo": "~54.0.14",
+    "expo-camera": "~17.0.8",
+    "expo-clipboard": "^8.0.7",
+    "expo-document-picker": "~14.0.7",
+    "expo-file-system": "~19.0.17",
+    "expo-image-manipulator": "~14.0.7",
+    "expo-image-picker": "~17.0.8",
+    "expo-media-library": "~18.2.0",
+    "expo-print": "~15.0.7",
+    "expo-router": "~6.0.13",
+    "expo-sharing": "~14.0.7",
+    "expo-speech": "~14.0.7",
     "expo-status-bar": "~3.0.8",
+    "pdf-lib": "^1.17.1",
     "react": "19.1.0",
-    "react-native": "0.81.4"
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-draggable-flatlist": "^4.0.3",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-paper": "^5.14.5",
+    "react-native-pdf": "^7.0.3",
+    "react-native-pdf-lib": "^1.0.0",
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-signature-canvas": "^5.0.1",
+    "react-native-view-shot": "4.0.3",
+    "react-native-webview": "13.15.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "babel-preset-expo": "^54.0.6",
+    "react-dom": "19.1.0",
     "typescript": "~5.9.2"
   },
   "private": true
