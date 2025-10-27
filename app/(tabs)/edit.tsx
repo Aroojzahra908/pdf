@@ -5,6 +5,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 import { rotatePage, deletePages, getPdfPageInfo, loadPdfDocument, savePdfDocument } from '../../src/utils/pdfUtils';
 import { PDFViewer } from '../../src/components/PDFViewer';
+import { handlePdfError, validateSelection } from '../../src/utils/errorHandler';
 import type { PdfPageInfo } from '../../src/utils/pdfUtils';
 
 export default function EditPdfScreen() {
