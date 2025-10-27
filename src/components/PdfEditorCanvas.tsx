@@ -67,6 +67,7 @@ export default function PdfEditorCanvas({
           text: text.trim(),
           fontSize: parseInt(fontSize) || 12,
           color: hexToRgb(selectedColor),
+          fontFamily: selectedFont,
         },
         position: position || { x: 50, y: pageHeight - 100 },
       });
