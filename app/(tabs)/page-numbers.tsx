@@ -1,139 +1,65 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Button, Text, Card, ActivityIndicator, SegmentedButtons, Chip } from 'react-native-paper';
+import { Button, Text, Card, RadioButton, TextInput, ActivityIndicator } from 'react-native-paper';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { addPageNumbers } from '../../src/utils/pdfUtils';
 
-type Position = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
-type Format = 'number' | 'page-x' | 'page-x-of-y';
+interface PdfFile {
+  name: string;
+  uri: string;
+}
+
+type Position = 'bottom-center' | 'bottom-left' | 'bottom-right';
 
 export default function PageNumbersScreen() {
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [fileUri, setFileUri] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState<PdfFile | null>(null);
   const [position, setPosition] = useState<Position>('bottom-center');
-  const [format, setFormat] = useState<Format>('page-x-of-y');
-  const [startPage, setStartPage] = useState(1);
+  const [startNumber, setStartNumber] = useState('1');
+  const [loading, setLoading] = useState(false);
 
   const pickPdf = async () => {
-    try {
-      const res = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
-      if (res.assets && res.assets[0]) {
-        setFileName(res.assets[0].name || 'document.pdf');
-        setFileUri(res.assets[0].uri);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick PDF');
+    const res = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
+    
+    if (res.assets && res.assets.length > 0) {
+      const asset = res.assets[0];
+      setFile({
+        name: asset.name,
+        uri: asset.uri,
+      });
     }
   };
 
-  const addPageNumbers = async () => {
-    if (!fileUri) {
+  const handleAddPageNumbers = async () => {
+    if (!file) {
       Alert.alert('Error', 'Please select a PDF');
+      return;
+    }
+
+    const startNum = parseInt(startNumber) || 1;
+    if (startNum < 1) {
+      Alert.alert('Error', 'Start number must be at least 1');
       return;
     }
 
     try {
       setLoading(true);
-
-      const pdfBytes = await (FileSystem as any).readAsStringAsync(fileUri, {
-        encoding: (FileSystem as any).EncodingType.Base64,
-      });
-      
-      const pdfDoc = await PDFDocument.load(pdfBytes);
-      const pages = pdfDoc.getPages();
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const totalPages = pages.length;
-      
-      pages.forEach((page, index) => {
-        const { width, height } = page.getSize();
-        const pageNum = index + startPage;
-        
-        let text = '';
-        switch (format) {
-          case 'number':
-            text = `${pageNum}`;
-            break;
-          case 'page-x':
-            text = `Page ${pageNum}`;
-            break;
-          case 'page-x-of-y':
-            text = `Page ${pageNum} of ${totalPages}`;
-            break;
-        }
-        
-        const textWidth = font.widthOfTextAtSize(text, 10);
-        let x = 0;
-        let y = 0;
-        
-        // Calculate position
-        switch (position) {
-          case 'top-left':
-            x = 30;
-            y = height - 30;
-            break;
-          case 'top-center':
-            x = (width - textWidth) / 2;
-            y = height - 30;
-            break;
-          case 'top-right':
-            x = width - textWidth - 30;
-            y = height - 30;
-            break;
-          case 'bottom-left':
-            x = 30;
-            y = 20;
-            break;
-          case 'bottom-center':
-            x = (width - textWidth) / 2;
-            y = 20;
-            break;
-          case 'bottom-right':
-            x = width - textWidth - 30;
-            y = 20;
-            break;
-        }
-        
-        page.drawText(text, {
-          x,
-          y,
-          size: 10,
-          font,
-          color: rgb(0, 0, 0),
-        });
-      });
-      
-      const numberedBytes = await pdfDoc.save();
-      const outputUri = `${(FileSystem as any).documentDirectory}numbered_${Date.now()}.pdf`;
-      
-      const base64 = btoa(String.fromCharCode(...Array.from(numberedBytes)));
-      await (FileSystem as any).writeAsStringAsync(outputUri, base64, {
-        encoding: (FileSystem as any).EncodingType.Base64,
-      });
-      
-      setFileUri(outputUri);
+      const resultUri = await addPageNumbers(file.uri, position, startNum);
       setLoading(false);
-      Alert.alert('Success', 'Page numbers added successfully!');
+
+      Alert.alert('Success', 'Page numbers added successfully!', [
+        {
+          text: 'Share',
+          onPress: async () => {
+            const canShare = await Sharing.isAvailableAsync();
+            if (canShare) await Sharing.shareAsync(resultUri);
+          }
+        },
+        { text: 'OK' }
+      ]);
     } catch (error) {
       setLoading(false);
       Alert.alert('Error', 'Failed to add page numbers');
-    }
-  };
-
-  const shareFile = async () => {
-    if (!fileUri) return;
-    
-    try {
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(fileUri);
-      } else {
-        Alert.alert('Success', `PDF saved to: ${fileUri}`);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to share PDF');
     }
   };
 
@@ -151,123 +77,94 @@ export default function PageNumbersScreen() {
       <Button 
         mode="contained" 
         onPress={pickPdf} 
-        style={styles.pickButton}
         icon="file-pdf-box"
+        style={styles.button}
       >
-        Select PDF
+        {file ? 'Change PDF' : 'Select PDF'}
       </Button>
-
-      {fileName && !loading && (
-        <>
-          <Card style={styles.infoCard}>
-            <Card.Content>
-              <Text variant="titleMedium">📄 {fileName}</Text>
-            </Card.Content>
-          </Card>
-
-          <Card style={styles.settingsCard}>
-            <Card.Content>
-              <Text variant="titleMedium" style={styles.sectionTitle}>Format</Text>
-              <View style={styles.formatChips}>
-                <Chip
-                  selected={format === 'number'}
-                  onPress={() => setFormat('number')}
-                >
-                  1, 2, 3...
-                </Chip>
-                <Chip
-                  selected={format === 'page-x'}
-                  onPress={() => setFormat('page-x')}
-                >
-                  Page 1, Page 2...
-                </Chip>
-                <Chip
-                  selected={format === 'page-x-of-y'}
-                  onPress={() => setFormat('page-x-of-y')}
-                >
-                  Page 1 of 10
-                </Chip>
-              </View>
-
-              <Text variant="titleMedium" style={[styles.sectionTitle, { marginTop: 20 }]}>Position</Text>
-              <View style={styles.positionGrid}>
-                <Button
-                  mode={position === 'top-left' ? 'contained' : 'outlined'}
-                  onPress={() => setPosition('top-left')}
-                  compact
-                  style={styles.positionButton}
-                >
-                  ↖ Top Left
-                </Button>
-                <Button
-                  mode={position === 'top-center' ? 'contained' : 'outlined'}
-                  onPress={() => setPosition('top-center')}
-                  compact
-                  style={styles.positionButton}
-                >
-                  ↑ Top Center
-                </Button>
-                <Button
-                  mode={position === 'top-right' ? 'contained' : 'outlined'}
-                  onPress={() => setPosition('top-right')}
-                  compact
-                  style={styles.positionButton}
-                >
-                  ↗ Top Right
-                </Button>
-                <Button
-                  mode={position === 'bottom-left' ? 'contained' : 'outlined'}
-                  onPress={() => setPosition('bottom-left')}
-                  compact
-                  style={styles.positionButton}
-                >
-                  ↙ Bottom Left
-                </Button>
-                <Button
-                  mode={position === 'bottom-center' ? 'contained' : 'outlined'}
-                  onPress={() => setPosition('bottom-center')}
-                  compact
-                  style={styles.positionButton}
-                >
-                  ↓ Bottom Center
-                </Button>
-                <Button
-                  mode={position === 'bottom-right' ? 'contained' : 'outlined'}
-                  onPress={() => setPosition('bottom-right')}
-                  compact
-                  style={styles.positionButton}
-                >
-                  ↘ Bottom Right
-                </Button>
-              </View>
-            </Card.Content>
-          </Card>
-
-          <View style={styles.actionButtons}>
-            <Button 
-              mode="contained" 
-              onPress={addPageNumbers}
-              icon="numeric"
-              style={styles.addButton}
-            >
-              Add Page Numbers
-            </Button>
-            <Button 
-              mode="outlined" 
-              onPress={shareFile}
-              icon="share"
-            >
-              Share PDF
-            </Button>
-          </View>
-        </>
-      )}
 
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#673ab7" />
+          <ActivityIndicator size="large" />
           <Text>Adding page numbers...</Text>
         </View>
+      )}
+
+      {!loading && (
+        <>
+          <Card style={styles.optionsCard}>
+            <Card.Content>
+              <Text variant="titleMedium" style={styles.optionTitle}>Position</Text>
+              <View style={styles.radioGroup}>
+                <View style={styles.radioItem}>
+                  <RadioButton
+                    value="bottom-left"
+                    status={position === 'bottom-left' ? 'checked' : 'unchecked'}
+                    onPress={() => setPosition('bottom-left')}
+                  />
+                  <Text onPress={() => setPosition('bottom-left')} style={styles.radioLabel}>
+                    Bottom Left
+                  </Text>
+                </View>
+                <View style={styles.radioItem}>
+                  <RadioButton
+                    value="bottom-center"
+                    status={position === 'bottom-center' ? 'checked' : 'unchecked'}
+                    onPress={() => setPosition('bottom-center')}
+                  />
+                  <Text onPress={() => setPosition('bottom-center')} style={styles.radioLabel}>
+                    Bottom Center
+                  </Text>
+                </View>
+                <View style={styles.radioItem}>
+                  <RadioButton
+                    value="bottom-right"
+                    status={position === 'bottom-right' ? 'checked' : 'unchecked'}
+                    onPress={() => setPosition('bottom-right')}
+                  />
+                  <Text onPress={() => setPosition('bottom-right')} style={styles.radioLabel}>
+                    Bottom Right
+                  </Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+
+          <Card style={styles.optionsCard}>
+            <Card.Content>
+              <Text variant="titleMedium" style={styles.optionTitle}>Start Number</Text>
+              <TextInput
+                mode="outlined"
+                value={startNumber}
+                onChangeText={setStartNumber}
+                placeholder="1"
+                keyboardType="number-pad"
+                style={styles.input}
+              />
+              <Text style={styles.hint}>The first page will be numbered with this number</Text>
+            </Card.Content>
+          </Card>
+
+          {file && (
+            <Card style={styles.fileCard}>
+              <Card.Content>
+                <Text variant="titleMedium">Selected File</Text>
+                <Text style={styles.fileName}>📄 {file.name}</Text>
+              </Card.Content>
+            </Card>
+          )}
+
+          {file && (
+            <Button 
+              mode="contained" 
+              onPress={handleAddPageNumbers}
+              icon="plus-circle"
+              style={styles.actionButton}
+            >
+              Add Page Numbers
+            </Button>
+          )}
+        </>
       )}
     </ScrollView>
   );
@@ -275,17 +172,19 @@ export default function PageNumbersScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 16, paddingBottom: 40, backgroundColor: '#f8f9fa' },
-  headerCard: { backgroundColor: '#ede7f6', borderRadius: 16 },
-  title: { fontWeight: 'bold', color: '#673ab7' },
+  headerCard: { backgroundColor: '#f3e5f5', borderRadius: 16 },
+  title: { fontWeight: 'bold', color: '#9c27b0' },
   subtitle: { opacity: 0.7, marginTop: 4 },
-  pickButton: { borderRadius: 12, backgroundColor: '#673ab7' },
-  infoCard: { backgroundColor: '#fff', borderRadius: 12, elevation: 2 },
-  settingsCard: { backgroundColor: '#fff', borderRadius: 12, elevation: 2 },
-  sectionTitle: { marginBottom: 12, fontWeight: '600' },
-  formatChips: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  positionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  positionButton: { minWidth: 100 },
-  actionButtons: { gap: 12 },
-  addButton: { backgroundColor: '#673ab7' },
+  button: { borderRadius: 12 },
   loadingContainer: { alignItems: 'center', gap: 12, paddingVertical: 24 },
+  optionsCard: { backgroundColor: '#fff', borderRadius: 12, elevation: 2 },
+  optionTitle: { fontWeight: 'bold', marginBottom: 12 },
+  radioGroup: { gap: 12 },
+  radioItem: { flexDirection: 'row', alignItems: 'center' },
+  radioLabel: { marginLeft: 8, fontSize: 14 },
+  input: { backgroundColor: '#fff', marginVertical: 8 },
+  hint: { fontSize: 12, opacity: 0.6, marginTop: 4 },
+  fileCard: { backgroundColor: '#fff', borderRadius: 12, elevation: 2 },
+  fileName: { marginTop: 8, fontWeight: '600' },
+  actionButton: { borderRadius: 12, paddingVertical: 4 }
 });
