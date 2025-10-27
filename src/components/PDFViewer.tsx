@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator, Alert, TouchableOpacity, Platform } from 'react-native';
 import { Button, Text, Card } from 'react-native-paper';
 import { useWindowDimensions } from 'react-native';
-import PdfView from 'react-native-pdf';
 
 interface PDFViewerProps {
   uri: string;
@@ -28,16 +27,28 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     }
   }, [currentPage, totalPages, onPageChange]);
 
-  const handlePageChanged = (page: number, total: number) => {
-    setCurrentPage(page);
-    setTotalPages(total);
+  useEffect(() => {
+    loadPdfPages();
+  }, [uri]);
+
+  const loadPdfPages = async () => {
+    try {
+      setLoading(true);
+      setCurrentPage(1);
+      setTotalPages(1);
+      setLoading(false);
+    } catch (error) {
+      console.error('PDF Error:', error);
+      Alert.alert('Error', 'Failed to load PDF');
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.pageInfo}>
-          Page {currentPage} of {totalPages}
+          Page {currentPage} of {totalPages || '?'}
         </Text>
         {onClose && (
           <TouchableOpacity onPress={onClose}>
@@ -47,30 +58,26 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
       </View>
 
       <View style={styles.pdfContainer}>
-        <PdfView
-          source={{ uri }}
-          onLoadComplete={(numberOfPages) => {
-            setTotalPages(numberOfPages);
-            setLoading(false);
-          }}
-          onPageChanged={handlePageChanged}
-          onError={(error) => {
-            console.error('PDF Error:', error);
-            Alert.alert('Error', 'Failed to load PDF');
-            setLoading(false);
-          }}
-          page={currentPage}
-          scale={1.0}
-          minScale={0.5}
-          maxScale={3.0}
-          horizontal={false}
-          fitWidth={true}
-          enablePaging={true}
-          enableRTL={false}
-          trustAllCerts={false}
-          spacing={10}
-          style={styles.pdf}
-        />
+        {Platform.OS === 'web' ? (
+          <iframe
+            src={`${uri}#page=${currentPage}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              backgroundColor: '#16213e',
+            } as any}
+            title="PDF Viewer"
+          />
+        ) : (
+          <View style={styles.placeholderContent}>
+            <Text style={styles.placeholderText}>📄 PDF Content</Text>
+            <Text style={styles.placeholderSubText}>
+              PDF viewer is loading...
+            </Text>
+          </View>
+        )}
+
         {loading && (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator size="large" color="#ff6b6b" />
@@ -91,14 +98,14 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
 
         <View style={styles.pageInputContainer}>
           <Text style={styles.pageInputLabel}>
-            Page: {currentPage}/{totalPages}
+            Page: {currentPage}/{totalPages || '?'}
           </Text>
         </View>
 
         <Button
           mode="outlined"
-          onPress={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage >= totalPages}
+          onPress={() => setCurrentPage(currentPage + 1)}
+          disabled={totalPages > 0 && currentPage >= totalPages}
           style={styles.navButton}
         >
           Next →
@@ -120,6 +127,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    zIndex: 10,
   },
   pageInfo: {
     color: '#ffffff',
@@ -135,9 +143,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#16213e',
     position: 'relative',
-  },
-  pdf: {
-    flex: 1,
+    overflow: 'hidden',
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -151,6 +157,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
   },
+  placeholderContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#16213e',
+  },
+  placeholderText: {
+    fontSize: 36,
+    marginBottom: 12,
+  },
+  placeholderSubText: {
+    color: '#b0b0b0',
+    fontSize: 14,
+  },
   controls: {
     backgroundColor: '#2d2d44',
     paddingHorizontal: 12,
@@ -159,6 +179,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
+    zIndex: 10,
   },
   navButton: {
     flex: 1,
