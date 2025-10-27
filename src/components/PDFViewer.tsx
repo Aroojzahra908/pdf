@@ -1,117 +1,153 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator, Alert, TouchableOpacity, Platform } from 'react-native';
-import { Button, Text, Card } from 'react-native-paper';
-import { useWindowDimensions } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, Dimensions, ActivityIndicator, Alert, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Button, Text } from 'react-native-paper';
+import PdfView from 'react-native-pdf';
 
 interface PDFViewerProps {
   uri: string;
   onPageChange?: (page: number, totalPages: number) => void;
   onClose?: () => void;
-  allowEditing?: boolean;
 }
 
-export const PDFViewer: React.FC<PDFViewerProps> = ({ 
-  uri, 
-  onPageChange, 
-  onClose,
-  allowEditing = false 
-}) => {
+export const PDFViewer: React.FC<PDFViewerProps> = ({ uri, onPageChange, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
-  const dimensions = useWindowDimensions();
+  const [scale, setScale] = useState(1);
 
-  useEffect(() => {
-    if (onPageChange) {
-      onPageChange(currentPage, totalPages);
-    }
-  }, [currentPage, totalPages, onPageChange]);
+  const dimensions = Dimensions.get('window');
+  const pageWidth = dimensions.width;
+  const pageHeight = dimensions.height - 140;
 
-  useEffect(() => {
-    loadPdfPages();
-  }, [uri]);
+  const handlePageChanged = useCallback(
+    (page: number, total: number) => {
+      setCurrentPage(page);
+      setTotalPages(total);
+      if (onPageChange) {
+        onPageChange(page, total);
+      }
+    },
+    [onPageChange]
+  );
 
-  const loadPdfPages = async () => {
-    try {
-      setLoading(true);
-      setCurrentPage(1);
-      setTotalPages(1);
+  const handleLoadComplete = useCallback(
+    (numberOfPages: number) => {
+      setTotalPages(numberOfPages);
       setLoading(false);
-    } catch (error) {
-      console.error('PDF Error:', error);
-      Alert.alert('Error', 'Failed to load PDF');
-      setLoading(false);
+    },
+    []
+  );
+
+  const goToPage = (pageNum: number) => {
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setCurrentPage(pageNum);
     }
   };
 
+  const zoomIn = () => {
+    setScale(Math.min(scale + 0.2, 3));
+  };
+
+  const zoomOut = () => {
+    setScale(Math.max(scale - 0.2, 0.5));
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={onClose}>
+          <Text style={styles.backButton}>← Back</Text>
+        </TouchableOpacity>
         <Text style={styles.pageInfo}>
-          Page {currentPage} of {totalPages || '?'}
+          {currentPage} / {totalPages}
         </Text>
-        {onClose && (
-          <TouchableOpacity onPress={onClose}>
-            <Text style={styles.closeButton}>✕</Text>
+        <View style={styles.zoomControls}>
+          <TouchableOpacity onPress={zoomOut}>
+            <Text style={styles.zoomButton}>−</Text>
           </TouchableOpacity>
-        )}
+          <Text style={styles.zoomLevel}>{Math.round(scale * 100)}%</Text>
+          <TouchableOpacity onPress={zoomIn}>
+            <Text style={styles.zoomButton}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.pdfContainer}>
-        {Platform.OS === 'web' ? (
-          <iframe
-            src={`${uri}#page=${currentPage}`}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-              backgroundColor: '#16213e',
-            } as any}
-            title="PDF Viewer"
-          />
-        ) : (
-          <View style={styles.placeholderContent}>
-            <Text style={styles.placeholderText}>📄 PDF Content</Text>
-            <Text style={styles.placeholderSubText}>
-              PDF viewer is loading...
-            </Text>
-          </View>
-        )}
-
         {loading && (
-          <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#ff6b6b" />
             <Text style={styles.loadingText}>Loading PDF...</Text>
           </View>
         )}
+
+        <PdfView
+          source={{ uri }}
+          onLoadComplete={handleLoadComplete}
+          onPageChanged={handlePageChanged}
+          onError={(error) => {
+            console.error('PDF Error:', error);
+            setLoading(false);
+            Alert.alert('Error', 'Failed to load PDF. Please try another file.');
+          }}
+          page={currentPage}
+          scale={scale}
+          minScale={0.5}
+          maxScale={3}
+          horizontal={false}
+          fitWidth={true}
+          enablePaging={true}
+          style={styles.pdf}
+          activityIndicatorProps={{
+            color: '#ff6b6b',
+            size: 'large',
+          }}
+        />
       </View>
 
       <View style={styles.controls}>
         <Button
           mode="outlined"
-          onPress={() => setCurrentPage(Math.max(1, currentPage - 1))}
+          onPress={() => goToPage(currentPage - 1)}
           disabled={currentPage <= 1}
+          compact
           style={styles.navButton}
         >
-          ← Previous
+          ← Prev
         </Button>
 
-        <View style={styles.pageInputContainer}>
-          <Text style={styles.pageInputLabel}>
-            Page: {currentPage}/{totalPages || '?'}
-          </Text>
+        <View style={styles.pageInput}>
+          <TouchableOpacity
+            style={styles.pageInputField}
+            onPress={() => {
+              Alert.prompt('Go to page', 'Enter page number:', [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Go',
+                  onPress: (text) => {
+                    const pageNum = parseInt(text, 10);
+                    if (!isNaN(pageNum)) {
+                      goToPage(pageNum);
+                    }
+                  },
+                },
+              ]);
+            }}
+          >
+            <Text style={styles.pageInputText}>Page {currentPage}</Text>
+          </TouchableOpacity>
         </View>
 
         <Button
           mode="outlined"
-          onPress={() => setCurrentPage(currentPage + 1)}
-          disabled={totalPages > 0 && currentPage >= totalPages}
+          onPress={() => goToPage(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          compact
           style={styles.navButton}
         >
           Next →
         </Button>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -122,32 +158,58 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#2d2d44',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    zIndex: 10,
+    borderBottomColor: '#1a1a2e',
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    color: '#ff6b6b',
+    fontSize: 14,
+    fontWeight: '600',
   },
   pageInfo: {
     color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
   },
-  closeButton: {
-    fontSize: 24,
-    color: '#ffffff',
-    fontWeight: 'bold',
+  zoomControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#1a1a2e',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  zoomButton: {
+    color: '#ff6b6b',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  zoomLevel: {
+    color: '#b0b0b0',
+    fontSize: 11,
+    fontWeight: '600',
+    minWidth: 36,
+    textAlign: 'center',
   },
   pdfContainer: {
     flex: 1,
     backgroundColor: '#16213e',
     position: 'relative',
-    overflow: 'hidden',
   },
-  loadingOverlay: {
+  pdf: {
+    flex: 1,
+  },
+  loadingContainer: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(22, 33, 62, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 100,
@@ -156,41 +218,37 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     marginTop: 12,
     fontSize: 14,
-  },
-  placeholderContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#16213e',
-  },
-  placeholderText: {
-    fontSize: 36,
-    marginBottom: 12,
-  },
-  placeholderSubText: {
-    color: '#b0b0b0',
-    fontSize: 14,
+    fontWeight: '500',
   },
   controls: {
     backgroundColor: '#2d2d44',
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 12,
-    zIndex: 10,
+    gap: 8,
+    borderTopColor: '#1a1a2e',
+    borderTopWidth: 1,
   },
   navButton: {
-    flex: 1,
+    flex: 0.4,
   },
-  pageInputContainer: {
-    flex: 0.8,
+  pageInput: {
+    flex: 0.2,
     alignItems: 'center',
   },
-  pageInputLabel: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '500',
+  pageInputField: {
+    backgroundColor: '#1a1a2e',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderColor: '#ff6b6b',
+    borderWidth: 1,
+  },
+  pageInputText: {
+    color: '#ff6b6b',
+    fontSize: 11,
+    fontWeight: '600',
   },
 });
