@@ -350,7 +350,7 @@ export default function EditPdfScreen() {
             data.data.text,
             data.position.x,
             data.position.y,
-            { size: data.data.fontSize, color: data.data.color }
+            { size: data.data.fontSize, color: data.data.color, font: data.data.fontFamily }
           );
           break;
         case 'image':
