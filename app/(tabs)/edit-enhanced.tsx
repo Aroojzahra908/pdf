@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { Button, Text, Card, ActivityIndicator, IconButton, SegmentedButtons } from 'react-native-paper';
 import { WebView } from 'react-native-webview';
@@ -155,7 +155,7 @@ export default function EditPdfEnhancedScreen() {
           onPress={() => setEditorMode('annotate')}
         >
           <Text style={[styles.toolbarTabText, editorMode === 'annotate' && styles.toolbarTabTextActive]}>
-            ✏️ Annotate
+            ✏��� Annotate
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
