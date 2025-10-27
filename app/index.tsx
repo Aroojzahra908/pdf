@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Link } from 'expo-router';
 
@@ -13,103 +13,113 @@ interface Tool {
 
 export default function HomeScreen() {
   const tools: Tool[] = [
-    { key: 'merge', title: 'Merge PDF', href: '/(tabs)/merge-split', icon: '📑', color: '#FF6B6B' },
-    { key: 'split', title: 'Split PDF', href: '/(tabs)/merge-split', icon: '✂️', color: '#FF8B8B' },
-    { key: 'compress', title: 'Compress PDF', href: '/(tabs)/compress', icon: '📦', color: '#90EE90' },
-    { key: 'pdf-to-word', title: 'PDF to Word', href: '/(tabs)/convert', icon: '📘', color: '#4472C4' },
-    { key: 'pdf-to-ppt', title: 'PDF to PowerPoint', href: '/(tabs)/convert', icon: '🎨', color: '#ED7D31' },
-    { key: 'pdf-to-excel', title: 'PDF to Excel', href: '/(tabs)/convert', icon: '📊', color: '#70AD47' },
-    { key: 'word-to-pdf', title: 'Word to PDF', href: '/(tabs)/convert', icon: '📄', color: '#4472C4' },
-    { key: 'ppt-to-pdf', title: 'PowerPoint to PDF', href: '/(tabs)/convert', icon: '🎯', color: '#ED7D31' },
-    { key: 'excel-to-pdf', title: 'Excel to PDF', href: '/(tabs)/convert', icon: '📈', color: '#70AD47' },
-    { key: 'edit', title: 'Edit PDF', href: '/(tabs)/edit', icon: '✏️', color: '#FFC0CB' },
-    { key: 'pdf-to-jpg', title: 'PDF to JPG', href: '/(tabs)/extract', icon: '🖼️', color: '#FFD700' },
-    { key: 'image-to-pdf', title: 'Image to PDF', href: '/(tabs)/scan', icon: '🌄', color: '#FFE066' },
-    { key: 'annotate', title: 'Annotate', href: '/(tabs)/annotate', icon: '🖍️', color: '#FFC0CB' },
-    { key: 'watermark', title: 'Add Watermark', href: '/(tabs)/watermark', icon: '💧', color: '#87CEEB' },
-    { key: 'page-numbers', title: 'Add Page Numbers', href: '/(tabs)/page-numbers', icon: '🔢', color: '#D8A5FF' },
-    { key: 'protect', title: 'Protect PDF', href: '/(tabs)/protect', icon: '🔒', color: '#FF6B6B' },
-    { key: 'sign', title: 'Sign PDF', href: '/(tabs)/sign', icon: '✍️', color: '#FFB6C1' },
-    { key: 'reader', title: 'Voice Reader', href: '/(tabs)/reader', icon: '🔊', color: '#87CEEB' },
+    { key: 'merge', title: 'Merge', href: '/(tabs)/merge-split', icon: '📑', color: '#FF6B6B' },
+    { key: 'split', title: 'Split', href: '/(tabs)/merge-split', icon: '✂️', color: '#FF8B8B' },
+    { key: 'compress', title: 'Compress', href: '/(tabs)/compress', icon: '📦', color: '#90EE90' },
+    { key: 'edit', title: 'Edit', href: '/(tabs)/edit', icon: '✏️', color: '#FFC0CB' },
+    { key: 'annotate', title: 'Annotate', href: '/(tabs)/annotate', icon: '🖍️', color: '#FFB6C1' },
+    { key: 'watermark', title: 'Watermark', href: '/(tabs)/watermark', icon: '💧', color: '#87CEEB' },
+    { key: 'page-numbers', title: 'Page #', href: '/(tabs)/page-numbers', icon: '🔢', color: '#D8A5FF' },
+    { key: 'protect', title: 'Protect', href: '/(tabs)/protect', icon: '🔒', color: '#FF6B6B' },
+    { key: 'extract', title: 'Extract Text', href: '/(tabs)/extract', icon: '📄', color: '#5e60ce' },
+    { key: 'reader', title: 'Read Aloud', href: '/(tabs)/reader', icon: '🔊', color: '#87CEEB' },
+    { key: 'scan', title: 'Scan', href: '/(tabs)/scan', icon: '📱', color: '#ff9800' },
+    { key: 'rotate', title: 'Rotate', href: '/(tabs)/rotate', icon: '↻', color: '#81c784' },
   ];
 
   const screenWidth = Dimensions.get('window').width;
-  const cardSize = (screenWidth - 48) / 3;
+  const itemsPerRow = 3;
+  const cardSize = (screenWidth - 36) / itemsPerRow;
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>❤️ PDF</Text>
-        <Text style={styles.headerTitle}>Smart PDF Tools</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.logo}>❤️ PDF</Text>
+        </View>
 
-      <View style={styles.gridContainer}>
-        {tools.map((tool) => (
-          <Link href={tool.href} asChild key={tool.key}>
-            <Pressable style={[styles.toolCard, { width: cardSize, height: cardSize }]}>
-              <View style={[styles.iconContainer, { backgroundColor: tool.color }]}>
-                <Text style={styles.iconText}>{tool.icon}</Text>
-              </View>
-              <Text style={styles.toolTitle}>{tool.title}</Text>
-            </Pressable>
-          </Link>
-        ))}
-      </View>
-    </ScrollView>
+        <View style={styles.gridContainer}>
+          {tools.map((tool) => (
+            <Link href={tool.href} asChild key={tool.key}>
+              <TouchableOpacity style={[styles.toolCard, { width: cardSize, height: cardSize }]}>
+                <View style={[styles.iconContainer, { backgroundColor: tool.color }]}>
+                  <Text style={styles.iconText}>{tool.icon}</Text>
+                </View>
+                <Text style={styles.toolTitle} numberOfLines={1}>
+                  {tool.title}
+                </Text>
+              </TouchableOpacity>
+            </Link>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#1a1a2e',
+  },
   container: {
     flex: 1,
     backgroundColor: '#1a1a2e',
   },
   header: {
-    paddingVertical: 24,
+    paddingVertical: 20,
     paddingHorizontal: 16,
     alignItems: 'center',
+    borderBottomColor: '#2d2d44',
+    borderBottomWidth: 1,
   },
   logo: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: '#e0e0e0',
-    fontWeight: '500',
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 1,
   },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: 12,
-    paddingBottom: 32,
+    paddingVertical: 16,
+    gap: 6,
     justifyContent: 'space-between',
   },
   toolCard: {
-    marginBottom: 16,
+    marginBottom: 6,
     backgroundColor: '#2d2d44',
     borderRadius: 16,
-    padding: 12,
+    padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
   },
   iconContainer: {
-    width: '70%',
+    width: '75%',
     aspectRatio: 1,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   iconText: {
     fontSize: 32,
   },
   toolTitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#ffffff',
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });
