@@ -40,6 +40,8 @@ export default function EditPdfEnhancedScreen() {
   const [zoom, setZoom] = useState(1);
   const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [previewHtml, setPreviewHtml] = useState<string>('');
+  const isMounted = useRef(true);
+  useEffect(() => () => { isMounted.current = false; }, []);
   
   // Text editing state
   const [selectedFont, setSelectedFont] = useState('TimesNewRomanBold');
@@ -155,7 +157,7 @@ export default function EditPdfEnhancedScreen() {
           onPress={() => setEditorMode('annotate')}
         >
           <Text style={[styles.toolbarTabText, editorMode === 'annotate' && styles.toolbarTabTextActive]}>
-            ✏��� Annotate
+            ✏️ Annotate
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
