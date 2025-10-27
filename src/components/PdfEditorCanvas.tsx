@@ -150,6 +150,19 @@ export default function PdfEditorCanvas({
               keyboardType="numeric"
               style={styles.fontSizeInput}
             />
+            <View style={{ gap: 8 }}>
+              <Text>Font:</Text>
+              <SegmentedButtons
+                value={selectedFont}
+                onValueChange={(v) => setSelectedFont(v as any)}
+                buttons={[
+                  { value: 'Helvetica', label: 'Helvetica' },
+                  { value: 'TimesRoman', label: 'Times' },
+                  { value: 'Courier', label: 'Courier' },
+                ]}
+                style={styles.segmentedButtons}
+              />
+            </View>
             <View style={styles.colorPicker}>
               <Text>Color:</Text>
               <View style={styles.colorOptions}>
