@@ -428,7 +428,7 @@ export async function addHighlightToPdf(
   const pdfDoc = await loadPdfDocument(uri);
   const page = pdfDoc.getPages()[Math.max(0, Math.min(pageIndex, pdfDoc.getPageCount() - 1))];
   page.drawRectangle({ x, y, width, height, color: rgb(color.r, color.g, color.b), opacity: 0.35 });
-  return await savePdfDocument(pdfDoc, `edited_${Date.Now ? 'edited' : 'edited'}_${Date.now()}.pdf`);
+  return await savePdfDocument(pdfDoc, `edited_${Date.now()}.pdf`);
 }
 
 export async function addUnderlineToPdf(
