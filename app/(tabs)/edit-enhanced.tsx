@@ -103,7 +103,7 @@ export default function EditPdfEnhancedScreen() {
     if (fileUri) {
       refreshPreview(fileUri, currentPage);
     }
-  }, [fileUri, currentPage, zoom]);
+  }, [fileUri, currentPage, zoom, refreshPreview]);
 
   const pickPdf = async () => {
     try {
