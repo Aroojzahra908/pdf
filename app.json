@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "smart-pdf",
-    "slug": "smart-pdf",
+    "name": "iLovePDF Mobile",
+    "slug": "ilovepdf-mobile",
     "version": "1.0.0",
-    "scheme": "smartpdf",
+    "scheme": "ilovepdf",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "description": "Complete PDF toolkit for mobile - Edit, convert, compress, merge, split, sign and more!",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",

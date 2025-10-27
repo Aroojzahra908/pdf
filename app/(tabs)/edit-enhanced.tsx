@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { Button, Text, Card, ActivityIndicator, IconButton, SegmentedButtons } from 'react-native-paper';
 import { WebView } from 'react-native-webview';
 import * as DocumentPicker from 'expo-document-picker';
@@ -12,8 +12,7 @@ import {
 } from '../../src/utils/pdfUtils';
 import type { PdfPageInfo } from '../../src/utils/pdfUtils';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const IS_MOBILE = SCREEN_WIDTH < 768;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type EditorMode = 'annotate' | 'edit';
 type TextAlign = 'left' | 'center' | 'right';
@@ -51,8 +50,6 @@ export default function EditPdfEnhancedScreen() {
   const [textAlign, setTextAlign] = useState<TextAlign>('left');
   const [textElements, setTextElements] = useState<TextElement[]>([]);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-  const [showSidebar, setShowSidebar] = useState(!IS_MOBILE);
-  const [showHelp, setShowHelp] = useState(false);
 
   const buildPdfHtml = (base64: string, pageNum: number, scale: number) => `<!doctype html>
   <html>
@@ -153,19 +150,12 @@ export default function EditPdfEnhancedScreen() {
   const renderTopToolbar = () => (
     <View style={styles.topToolbar}>
       <View style={styles.toolbarLeft}>
-        {IS_MOBILE && (
-          <IconButton 
-            icon={showSidebar ? "menu-open" : "menu"} 
-            size={20} 
-            onPress={() => setShowSidebar(!showSidebar)}
-          />
-        )}
         <TouchableOpacity 
           style={[styles.toolbarTab, editorMode === 'annotate' && styles.toolbarTabActive]}
           onPress={() => setEditorMode('annotate')}
         >
           <Text style={[styles.toolbarTabText, editorMode === 'annotate' && styles.toolbarTabTextActive]}>
-            {IS_MOBILE ? '✏️' : '✏️ Annotate'}
+            ✏️ Annotate
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
@@ -173,59 +163,53 @@ export default function EditPdfEnhancedScreen() {
           onPress={() => setEditorMode('edit')}
         >
           <Text style={[styles.toolbarTabText, editorMode === 'edit' && styles.toolbarTabTextActive]}>
-            {IS_MOBILE ? '📝' : '📝 Edit'}
+            📝 Edit
           </Text>
         </TouchableOpacity>
       </View>
-      {!IS_MOBILE && (
-        <View style={styles.toolbarRight}>
-          <IconButton icon="hand-back-left" size={20} />
-          <IconButton icon="cursor-default" size={20} />
-          <IconButton icon="image" size={20} />
-          <IconButton icon="draw" size={20} />
-          <IconButton icon="comment" size={20} />
-        </View>
-      )}
+      <View style={styles.toolbarRight}>
+        <IconButton icon="hand-back-left" size={20} />
+        <IconButton icon="cursor-default" size={20} />
+        <IconButton icon="image" size={20} />
+        <IconButton icon="draw" size={20} />
+        <IconButton icon="comment" size={20} />
+      </View>
     </View>
   );
 
   const renderTextFormattingToolbar = () => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.formattingToolbar}>
+    <View style={styles.formattingToolbar}>
       <View style={styles.formattingRow}>
-        {/* Font Family Dropdown - Hide on small mobile */}
-        {!IS_MOBILE && (
-          <View style={styles.fontDropdown}>
-            <Text style={styles.dropdownText} numberOfLines={1}>
-              {IS_MOBILE ? selectedFont.substring(0, 8) : selectedFont}
-            </Text>
-            <IconButton icon="chevron-down" size={16} />
-          </View>
-        )}
+        {/* Font Family Dropdown */}
+        <View style={styles.fontDropdown}>
+          <Text style={styles.dropdownText}>{selectedFont}</Text>
+          <IconButton icon="chevron-down" size={16} />
+        </View>
 
         {/* Font Size */}
         <View style={styles.fontSizeControl}>
-          <Text style={styles.fontSizeText}>{fontSize.toFixed(0)}</Text>
+          <Text style={styles.fontSizeText}>{fontSize.toFixed(2)}</Text>
           <IconButton icon="chevron-down" size={16} />
         </View>
 
         {/* Text Formatting Buttons */}
         <IconButton 
           icon="format-bold" 
-          size={IS_MOBILE ? 18 : 20} 
+          size={20} 
           selected={textBold}
           onPress={() => setTextBold(!textBold)}
           style={textBold ? styles.formatButtonActive : {}}
         />
         <IconButton 
           icon="format-italic" 
-          size={IS_MOBILE ? 18 : 20}
+          size={20}
           selected={textItalic}
           onPress={() => setTextItalic(!textItalic)}
           style={textItalic ? styles.formatButtonActive : {}}
         />
         <IconButton 
           icon="format-underline" 
-          size={IS_MOBILE ? 18 : 20}
+          size={20}
           selected={textUnderline}
           onPress={() => setTextUnderline(!textUnderline)}
           style={textUnderline ? styles.formatButtonActive : {}}
@@ -234,48 +218,42 @@ export default function EditPdfEnhancedScreen() {
         {/* Alignment */}
         <IconButton 
           icon="format-align-left" 
-          size={IS_MOBILE ? 18 : 20}
+          size={20}
           selected={textAlign === 'left'}
           onPress={() => setTextAlign('left')}
           style={textAlign === 'left' ? styles.formatButtonActive : {}}
         />
         <IconButton 
           icon="format-align-center" 
-          size={IS_MOBILE ? 18 : 20}
+          size={20}
           selected={textAlign === 'center'}
           onPress={() => setTextAlign('center')}
           style={textAlign === 'center' ? styles.formatButtonActive : {}}
         />
         <IconButton 
           icon="format-align-right" 
-          size={IS_MOBILE ? 18 : 20}
+          size={20}
           selected={textAlign === 'right'}
           onPress={() => setTextAlign('right')}
           style={textAlign === 'right' ? styles.formatButtonActive : {}}
         />
 
         {/* Color Picker */}
-        <IconButton icon="palette" size={IS_MOBILE ? 18 : 20} />
+        <IconButton icon="palette" size={20} />
 
         {/* Delete */}
-        <IconButton icon="delete" size={IS_MOBILE ? 18 : 20} iconColor="#ff595e" />
+        <IconButton icon="delete" size={20} iconColor="#ff595e" />
       </View>
-    </ScrollView>
+    </View>
   );
 
   const renderPageThumbnails = () => (
-    <View style={[
-      styles.thumbnailSidebar,
-      IS_MOBILE && showSidebar && styles.thumbnailSidebarOverlay
-    ]}>
+    <View style={styles.thumbnailSidebar}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {pages.map((page, index) => (
           <TouchableOpacity
             key={page.pageNumber}
-            onPress={() => {
-              setCurrentPage(index);
-              if (IS_MOBILE) setShowSidebar(false);
-            }}
+            onPress={() => setCurrentPage(index)}
             style={[
               styles.thumbnailCard,
               currentPage === index && styles.thumbnailCardActive
@@ -293,58 +271,47 @@ export default function EditPdfEnhancedScreen() {
 
   const renderBottomControls = () => (
     <View style={styles.bottomControls}>
-      {!IS_MOBILE && (
-        <View style={styles.bottomLeft}>
-          <IconButton icon="chevron-up" size={20} />
-          <IconButton icon="chevron-down" size={20} />
-        </View>
-      )}
+      <View style={styles.bottomLeft}>
+        <IconButton icon="chevron-up" size={20} />
+        <IconButton icon="chevron-down" size={20} />
+      </View>
       
       <View style={styles.bottomCenter}>
         <IconButton 
           icon="minus" 
-          size={IS_MOBILE ? 18 : 20} 
+          size={20} 
           onPress={() => setZoom(Math.max(0.5, zoom - 0.1))}
         />
         <IconButton 
           icon="plus" 
-          size={IS_MOBILE ? 18 : 20}
+          size={20}
           onPress={() => setZoom(Math.min(3, zoom + 0.1))}
         />
         <Text style={styles.pageIndicator}>
           {currentPage + 1} / {pages.length}
         </Text>
-        {!IS_MOBILE && <Text style={styles.zoomIndicator}>{Math.round(zoom * 100)}%</Text>}
+        <Text style={styles.zoomIndicator}>{Math.round(zoom * 100)}%</Text>
       </View>
 
       <View style={styles.bottomRight}>
-        {!IS_MOBILE && <IconButton icon="fit-to-page" size={20} />}
-        <IconButton icon="download" size={IS_MOBILE ? 18 : 20} onPress={saveAndShare} />
+        <IconButton icon="fit-to-page" size={20} />
+        <IconButton icon="download" size={20} />
       </View>
     </View>
   );
 
-  const renderHelpSidebar = () => {
-    if (IS_MOBILE && !showHelp) return null;
-    
-    return (
-      <View style={[styles.helpSidebar, IS_MOBILE && styles.helpSidebarMobile]}>
-        <Card style={styles.helpCard}>
-          <Card.Content>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={styles.helpTitle}>Edit PDF</Text>
-              {IS_MOBILE && (
-                <IconButton icon="close" size={20} onPress={() => setShowHelp(false)} />
-              )}
-            </View>
-            <Text style={styles.helpText}>
-              Use the toolbar to modify or add text, upload images, and annotate with ease.
-            </Text>
-          </Card.Content>
-        </Card>
-      </View>
-    );
-  };
+  const renderHelpSidebar = () => (
+    <View style={styles.helpSidebar}>
+      <Card style={styles.helpCard}>
+        <Card.Content>
+          <Text style={styles.helpTitle}>Edit PDF</Text>
+          <Text style={styles.helpText}>
+            Use the toolbar to modify or add text, upload images, and annotate with ease.
+          </Text>
+        </Card.Content>
+      </Card>
+    </View>
+  );
 
   if (!fileUri) {
     return (
@@ -388,7 +355,7 @@ export default function EditPdfEnhancedScreen() {
       {/* Main Content Area */}
       <View style={styles.contentArea}>
         {/* Left Sidebar - Page Thumbnails */}
-        {(showSidebar || !IS_MOBILE) && renderPageThumbnails()}
+        {renderPageThumbnails()}
 
         {/* Center - PDF Viewer */}
         <View style={styles.pdfViewerContainer}>
@@ -411,7 +378,7 @@ export default function EditPdfEnhancedScreen() {
         </View>
 
         {/* Right Sidebar - Help */}
-        {!IS_MOBILE && renderHelpSidebar()}
+        {renderHelpSidebar()}
       </View>
 
       {/* Bottom Controls */}
@@ -543,29 +510,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   thumbnailSidebar: {
-    width: IS_MOBILE ? 100 : 120,
+    width: 120,
     backgroundColor: '#fff',
     borderRightWidth: 1,
     borderRightColor: '#e0e0e0',
-    paddingVertical: IS_MOBILE ? 8 : 16,
-    paddingHorizontal: IS_MOBILE ? 4 : 8,
-  },
-  thumbnailSidebarOverlay: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    zIndex: 999,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
   },
   thumbnailCard: {
-    marginBottom: IS_MOBILE ? 8 : 12,
+    marginBottom: 12,
     alignItems: 'center',
-    padding: IS_MOBILE ? 4 : 8,
+    padding: 8,
     borderRadius: 8,
     borderWidth: 2,
     borderColor: 'transparent',
@@ -575,8 +530,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f9ff',
   },
   thumbnailPreview: {
-    width: IS_MOBILE ? 60 : 80,
-    height: IS_MOBILE ? 80 : 100,
+    width: 80,
+    height: 100,
     backgroundColor: '#f5f5f5',
     borderRadius: 4,
     justifyContent: 'center',
@@ -593,7 +548,7 @@ const styles = StyleSheet.create({
   pdfViewerContainer: {
     flex: 1,
     backgroundColor: '#525659',
-    padding: IS_MOBILE ? 8 : 16,
+    padding: 16,
   },
   pdfViewer: {
     flex: 1,
@@ -605,23 +560,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   helpSidebar: {
-    width: IS_MOBILE ? SCREEN_WIDTH : 280,
+    width: 280,
     backgroundColor: '#fff',
-    borderLeftWidth: IS_MOBILE ? 0 : 1,
+    borderLeftWidth: 1,
     borderLeftColor: '#e0e0e0',
     padding: 16,
-  },
-  helpSidebarMobile: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: -2, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
   },
   helpCard: {
     backgroundColor: '#e3f2fd',
@@ -669,14 +612,14 @@ const styles = StyleSheet.create({
   },
   editPdfButton: {
     position: 'absolute',
-    bottom: IS_MOBILE ? 70 : 80,
-    right: IS_MOBILE ? 16 : 24,
+    bottom: 80,
+    right: 24,
     backgroundColor: '#ff6b6b',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: IS_MOBILE ? 16 : 20,
-    paddingRight: IS_MOBILE ? 4 : 8,
-    paddingVertical: IS_MOBILE ? 6 : 8,
+    paddingLeft: 20,
+    paddingRight: 8,
+    paddingVertical: 8,
     borderRadius: 24,
     elevation: 4,
     shadowColor: '#000',
@@ -686,7 +629,7 @@ const styles = StyleSheet.create({
   },
   editPdfButtonText: {
     color: '#fff',
-    fontSize: IS_MOBILE ? 14 : 16,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
