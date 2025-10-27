@@ -88,14 +88,16 @@ export default function EditPdfEnhancedScreen() {
   </body>
   </html>`;
 
-  const refreshPreview = async (uri: string, pageIdx: number) => {
+  const refreshPreview = useCallback(async (uri: string, pageIdx: number) => {
     try {
       const base64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: 'base64' });
+      if (!isMounted.current) return;
       setPreviewHtml(buildPdfHtml(base64, pageIdx + 1, zoom * 0.4));
     } catch (e) {
+      if (!isMounted.current) return;
       setPreviewHtml('');
     }
-  };
+  }, [zoom, isMounted]);
 
   useEffect(() => {
     if (fileUri) {
