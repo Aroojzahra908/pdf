@@ -93,44 +93,53 @@ export default function EditPdfScreen() {
   };
 
   const deleteSelectedPages = async () => {
-    if (!fileUri || selectedPages.size === 0) {
-      Alert.alert('Select Pages', 'Please select at least one page to delete');
-      return;
-    }
+    try {
+      validateSelection(selectedPages.size);
 
-    Alert.alert(
-      'Confirm Delete',
-      `Delete ${selectedPages.size} page(s)?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              const indices = Array.from(selectedPages)
-                .map((p) => p - 1)
-                .sort((a, b) => b - a);
+      if (!fileUri) {
+        Alert.alert('Error', 'PDF file not found');
+        return;
+      }
 
-              const newUri = await deletePages(fileUri, indices);
+      Alert.alert(
+        'Confirm Delete',
+        `Delete ${selectedPages.size} page(s)?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                setLoading(true);
+                const indices = Array.from(selectedPages)
+                  .map((p) => p - 1)
+                  .sort((a, b) => b - a);
 
-              const pdfDoc = await loadPdfDocument(newUri);
-              const pageInfo = await getPdfPageInfo(pdfDoc);
-              setPages(pageInfo);
-              setFileUri(newUri);
-              setSelectedPages(new Set());
-              setLoading(false);
+                const newUri = await deletePages(fileUri, indices);
 
-              Alert.alert('Success', 'Pages deleted successfully');
-            } catch (error) {
-              setLoading(false);
-              Alert.alert('Error', 'Failed to delete pages');
-            }
+                const pdfDoc = await loadPdfDocument(newUri);
+                const pageInfo = await getPdfPageInfo(pdfDoc);
+                setPages(pageInfo);
+                setFileUri(newUri);
+                const deletedCount = selectedPages.size;
+                setSelectedPages(new Set());
+                setLoading(false);
+
+                Alert.alert('Success', `Deleted ${deletedCount} page(s)`);
+              } catch (error) {
+                setLoading(false);
+                const errorMsg = handlePdfError(error, 'Deleting pages');
+                Alert.alert('Error', errorMsg);
+              }
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    } catch (error) {
+      const errorMsg = handlePdfError(error, 'Delete pages');
+      Alert.alert('Error', errorMsg);
+    }
   };
 
   const saveAndShare = async () => {
