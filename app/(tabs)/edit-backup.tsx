@@ -95,10 +95,10 @@ export default function EditPdfScreen() {
     let cancelled = false;
     try {
       const base64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: 'base64' });
-      if (cancelled) return;
+      if (!isMounted.current) return;
       setPreviewHtml(buildPdfHtml(base64, pageIdx + 1, zoom));
     } catch (e) {
-      if (cancelled) return;
+      if (!isMounted.current) return;
       setPreviewHtml('');
     }
   };
