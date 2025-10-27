@@ -43,6 +43,7 @@ export default function PdfEditorCanvas({
   const signatureRef = useRef<any>(null);
   const [text, setText] = useState('');
   const [fontSize, setFontSize] = useState('12');
+  const [selectedFont, setSelectedFont] = useState<'Helvetica' | 'TimesRoman' | 'Courier'>('Helvetica');
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [selectedShape, setSelectedShape] = useState<'rectangle' | 'circle' | 'line'>('rectangle');
   const [width, setWidth] = useState('200');
