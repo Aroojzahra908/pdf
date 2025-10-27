@@ -56,7 +56,7 @@ export default function EditPdfScreen() {
 
   const rotateSelectedPages = async (direction: 'left' | 'right') => {
     if (!fileUri || selectedPages.size === 0) {
-      Alert.alert('Select Pages', 'Please select at least one page to rotate');
+      Alert.alert('Select Pages', 'Please select at least one page');
       return;
     }
 
@@ -68,8 +68,9 @@ export default function EditPdfScreen() {
       for (const pageNum of Array.from(selectedPages).sort()) {
         const pageIndex = pageNum - 1;
         const page = currentPdf.getPage(pageIndex);
-        const newRotation = rotation > 0 ? 90 : -90;
-        page.setRotation(newRotation as any);
+        const currentRotation = page.getRotation().angle;
+        const newRotation = (currentRotation + rotation) % 360;
+        page.setRotation((newRotation / 90) as any);
       }
 
       const newUri = await savePdfDocument(currentPdf, `rotated_${Date.now()}.pdf`);
@@ -78,13 +79,15 @@ export default function EditPdfScreen() {
       const updatedPdf = await loadPdfDocument(newUri);
       const updatedPageInfo = await getPdfPageInfo(updatedPdf);
       setPages(updatedPageInfo);
+      const size = selectedPages.size;
       setSelectedPages(new Set());
 
-      Alert.alert('Success', `Rotated ${selectedPages.size} page(s)`);
+      Alert.alert('Success', `Rotated ${size} page(s) ${direction === 'left' ? 'left' : 'right'}`);
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      Alert.alert('Error', 'Failed to rotate pages');
+      console.error('Rotation error:', error);
+      Alert.alert('Error', `Failed to rotate pages: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
