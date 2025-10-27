@@ -90,10 +90,13 @@ export default function EditPdfScreen() {
   </html>`;
 
   const refreshPreview = async (uri: string, pageIdx: number) => {
+    let cancelled = false;
     try {
       const base64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: 'base64' });
+      if (cancelled) return;
       setPreviewHtml(buildPdfHtml(base64, pageIdx + 1, zoom));
     } catch (e) {
+      if (cancelled) return;
       setPreviewHtml('');
     }
   };
@@ -560,7 +563,7 @@ export default function EditPdfScreen() {
         <>
           <Card style={styles.infoCard}>
             <Card.Content>
-              <Text variant="titleMedium">📄 {fileName}</Text>
+              <Text variant="titleMedium">��� {fileName}</Text>
               <Text style={styles.pageCount}>{pages.length} pages</Text>
               {selectedPages.size > 0 && (
                 <Chip style={styles.selectionChip}>
