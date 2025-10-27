@@ -14,10 +14,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
         <Stack initialRouteName="index" screenOptions={{
-          headerStyle: { backgroundColor: theme.colors.primary },
+          headerStyle: { backgroundColor: '#2d2d44' },
           headerTintColor: '#ffffff',
           headerTitleStyle: { fontWeight: 'bold' },
-          contentStyle: { backgroundColor: '#f8f9fa' },
+          contentStyle: { backgroundColor: '#1a1a2e' },
         }}>
           <Stack.Screen name="index" options={{ title: 'Smart PDF' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
