@@ -43,6 +43,7 @@ export default function PdfEditorCanvas({
   const signatureRef = useRef<any>(null);
   const [text, setText] = useState('');
   const [fontSize, setFontSize] = useState('12');
+  const [selectedFont, setSelectedFont] = useState<'Helvetica' | 'TimesRoman' | 'Courier'>('Helvetica');
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [selectedShape, setSelectedShape] = useState<'rectangle' | 'circle' | 'line'>('rectangle');
   const [width, setWidth] = useState('200');
@@ -66,6 +67,7 @@ export default function PdfEditorCanvas({
           text: text.trim(),
           fontSize: parseInt(fontSize) || 12,
           color: hexToRgb(selectedColor),
+          fontFamily: selectedFont,
         },
         position: position || { x: 50, y: pageHeight - 100 },
       });
@@ -150,6 +152,19 @@ export default function PdfEditorCanvas({
               keyboardType="numeric"
               style={styles.fontSizeInput}
             />
+            <View style={{ gap: 8 }}>
+              <Text>Font:</Text>
+              <SegmentedButtons
+                value={selectedFont}
+                onValueChange={(v) => setSelectedFont(v as any)}
+                buttons={[
+                  { value: 'Helvetica', label: 'Helvetica' },
+                  { value: 'TimesRoman', label: 'Times' },
+                  { value: 'Courier', label: 'Courier' },
+                ]}
+                style={styles.segmentedButtons}
+              />
+            </View>
             <View style={styles.colorPicker}>
               <Text>Color:</Text>
               <View style={styles.colorOptions}>
