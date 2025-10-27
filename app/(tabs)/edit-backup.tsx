@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Button, Text, Card, Chip, ActivityIndicator, Dialog, Portal, TextInput } from 'react-native-paper';
 import { WebView } from 'react-native-webview';
@@ -536,7 +536,7 @@ export default function EditPdfScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Card style={styles.headerCard}>
         <Card.Content>
-          <Text variant="titleLarge" style={styles.title}>✏️ Edit PDF</Text>
+          <Text variant="titleLarge" style={styles.title}>✏��� Edit PDF</Text>
           <Text style={styles.subtitle}>
             Edit text, images, shapes, annotate, draw/sign, reorder, rotate, delete, watermark, and AI tools
           </Text>
