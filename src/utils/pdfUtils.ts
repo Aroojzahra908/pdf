@@ -1,4 +1,4 @@
-import { PDFDocument, degrees, rgb, PDFPage } from 'pdf-lib';
+import { PDFDocument, degrees, rgb, PDFPage, StandardFonts } from 'pdf-lib';
 import * as FileSystem from 'expo-file-system/legacy';
 
 export interface PdfPageInfo {
@@ -274,4 +274,232 @@ export async function rotateAllPages(
   });
 
   return await savePdfDocument(pdfDoc, `rotated_all_${Date.now()}.pdf`);
+}
+
+// Map common font names to pdf-lib StandardFonts
+function mapFontFamily(name?: string): string {
+  switch ((name || '').toLowerCase()) {
+    case 'timesnewroman':
+    case 'timesnewromanbold':
+    case 'times-roman':
+    case 'times':
+    case 'timesromanbold':
+      return StandardFonts.TimesRoman;
+    case 'courier':
+    case 'couriernew':
+      return StandardFonts.Courier;
+    case 'helvetica':
+    case 'arial':
+    default:
+      return StandardFonts.Helvetica;
+  }
+}
+
+export async function addTextToPdf(
+  uri: string,
+  pageIndex: number,
+  text: string,
+  x: number,
+  y: number,
+  options?: {
+    size?: number;
+    color?: { r: number; g: number; b: number };
+    font?: string;
+    underline?: boolean;
+    align?: 'left' | 'center' | 'right';
+  }
+): Promise<string> {
+  const pdfDoc = await loadPdfDocument(uri);
+  const pages = pdfDoc.getPages();
+  const page = pages[Math.max(0, Math.min(pageIndex, pages.length - 1))];
+
+  const size = options?.size ?? 12;
+  const color = options?.color ? rgb(options.color.r, options.color.g, options.color.b) : rgb(0, 0, 0);
+  const fontName = mapFontFamily(options?.font);
+  const font = await pdfDoc.embedFont(fontName);
+
+  // Measure and adjust x for alignment if needed
+  const textWidth = font.widthOfTextAtSize(text, size);
+  let drawX = x;
+  if (options?.align === 'center') {
+    drawX = x - textWidth / 2;
+  } else if (options?.align === 'right') {
+    drawX = x - textWidth;
+  }
+
+  page.drawText(text, {
+    x: drawX,
+    y,
+    size,
+    color,
+    font,
+  });
+
+  // Underline if requested
+  if (options?.underline) {
+    const underlineThickness = Math.max(0.5, size * 0.06);
+    page.drawRectangle({
+      x: drawX,
+      y: y - underlineThickness - 1,
+      width: textWidth,
+      height: underlineThickness,
+      color,
+      opacity: 1,
+    });
+  }
+
+  return await savePdfDocument(pdfDoc, `edited_${Date.now()}.pdf`);
+}
+
+export async function addImageToPdf(
+  uri: string,
+  pageIndex: number,
+  imageUri: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): Promise<string> {
+  const pdfDoc = await loadPdfDocument(uri);
+  const pages = pdfDoc.getPages();
+  const page = pages[Math.max(0, Math.min(pageIndex, pages.length - 1))];
+
+  const base64 = await FileSystem.readAsStringAsync(imageUri, { encoding: 'base64' as any });
+  const imgBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  let embedded: any;
+  try {
+    embedded = await pdfDoc.embedPng(imgBytes);
+  } catch {
+    embedded = await pdfDoc.embedJpg(imgBytes);
+  }
+
+  // pdf-lib positions images from bottom-left
+  page.drawImage(embedded, {
+    x,
+    y: y,
+    width,
+    height,
+  });
+
+  return await savePdfDocument(pdfDoc, `edited_${Date.now()}.pdf`);
+}
+
+export async function addShapeToPdf(
+  uri: string,
+  pageIndex: number,
+  shape: 'rectangle' | 'circle' | 'line',
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  options?: {
+    fillColor?: { r: number; g: number; b: number };
+    borderColor?: { r: number; g: number; b: number };
+    borderWidth?: number;
+  }
+): Promise<string> {
+  const pdfDoc = await loadPdfDocument(uri);
+  const page = pdfDoc.getPages()[Math.max(0, Math.min(pageIndex, pdfDoc.getPageCount() - 1))];
+
+  const fill = options?.fillColor ? rgb(options.fillColor.r, options.fillColor.g, options.fillColor.b) : undefined;
+  const stroke = options?.borderColor ? rgb(options.borderColor.r, options.borderColor.g, options.borderColor.b) : undefined;
+  const borderWidth = options?.borderWidth ?? 2;
+
+  if (shape === 'rectangle') {
+    page.drawRectangle({ x, y, width, height, color: fill, borderColor: stroke, borderWidth });
+  } else if (shape === 'circle') {
+    page.drawEllipse({ x: x + width / 2, y: y + height / 2, xScale: width / 2, yScale: height / 2, color: fill, borderColor: stroke, borderWidth });
+  } else if (shape === 'line') {
+    page.drawLine({ start: { x, y }, end: { x: x + width, y }, thickness: borderWidth, color: stroke ?? rgb(0, 0, 0) });
+  }
+
+  return await savePdfDocument(pdfDoc, `edited_${Date.now()}.pdf`);
+}
+
+export async function addHighlightToPdf(
+  uri: string,
+  pageIndex: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  color: { r: number; g: number; b: number }
+): Promise<string> {
+  const pdfDoc = await loadPdfDocument(uri);
+  const page = pdfDoc.getPages()[Math.max(0, Math.min(pageIndex, pdfDoc.getPageCount() - 1))];
+  page.drawRectangle({ x, y, width, height, color: rgb(color.r, color.g, color.b), opacity: 0.35 });
+  return await savePdfDocument(pdfDoc, `edited_${Date.Now ? 'edited' : 'edited'}_${Date.now()}.pdf`);
+}
+
+export async function addUnderlineToPdf(
+  uri: string,
+  pageIndex: number,
+  x: number,
+  y: number,
+  width: number,
+  color: { r: number; g: number; b: number }
+): Promise<string> {
+  const pdfDoc = await loadPdfDocument(uri);
+  const page = pdfDoc.getPages()[Math.max(0, Math.min(pageIndex, pdfDoc.getPageCount() - 1))];
+  const thickness = 2;
+  page.drawRectangle({ x, y, width, height: thickness, color: rgb(color.r, color.g, color.b) });
+  return await savePdfDocument(pdfDoc, `edited_${Date.now()}.pdf`);
+}
+
+export async function addStrikethroughToPdf(
+  uri: string,
+  pageIndex: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  color: { r: number; g: number; b: number }
+): Promise<string> {
+  const pdfDoc = await loadPdfDocument(uri);
+  const page = pdfDoc.getPages()[Math.max(0, Math.min(pageIndex, pdfDoc.getPageCount() - 1))];
+  const yMid = y + height / 2;
+  page.drawRectangle({ x, y: yMid, width, height: 2, color: rgb(color.r, color.g, color.b) });
+  return await savePdfDocument(pdfDoc, `edited_${Date.now()}.pdf`);
+}
+
+export async function addDrawingToPdf(
+  uri: string,
+  pageIndex: number,
+  imageUri: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): Promise<string> {
+  // Reuse addImageToPdf implementation
+  return await addImageToPdf(uri, pageIndex, imageUri, x, y, width, height);
+}
+
+export async function addWatermarkToPdf(
+  uri: string,
+  text: string,
+  options?: { opacity?: number; rotation?: number; size?: number }
+): Promise<string> {
+  const pdfDoc = await loadPdfDocument(uri);
+  const pages = pdfDoc.getPages();
+  const opacity = options?.opacity ?? 0.3;
+  const rotation = options?.rotation ?? -45;
+  const size = options?.size ?? 60;
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  pages.forEach((page) => {
+    const { width, height } = page.getSize();
+    const textWidth = font.widthOfTextAtSize(text, size);
+    page.drawText(text, {
+      x: width / 2 - textWidth / 2,
+      y: height / 2,
+      size,
+      color: rgb(0.8, 0.8, 0.8),
+      opacity,
+      rotate: degrees(rotation),
+      font,
+    });
+  });
+
+  return await savePdfDocument(pdfDoc, `watermarked_${Date.now()}.pdf`);
 }
