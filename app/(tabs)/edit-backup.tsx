@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Button, Text, Card, Chip, ActivityIndicator, Dialog, Portal, TextInput } from 'react-native-paper';
 import { WebView } from 'react-native-webview';
@@ -52,6 +52,8 @@ export default function EditPdfScreen() {
   const [dragStart, setDragStart] = useState<{x: number; y: number} | null>(null);
   const [dragCurrent, setDragCurrent] = useState<{x: number; y: number} | null>(null);
   const [zoom, setZoom] = useState(1.5);
+  const isMounted = useRef(true);
+  useEffect(() => () => { isMounted.current = false; }, []);
 
   const buildPdfHtml = (base64: string, pageNum: number, scale: number) => `<!doctype html>
   <html>
@@ -90,10 +92,13 @@ export default function EditPdfScreen() {
   </html>`;
 
   const refreshPreview = async (uri: string, pageIdx: number) => {
+    let cancelled = false;
     try {
       const base64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: 'base64' });
+      if (!isMounted.current) return;
       setPreviewHtml(buildPdfHtml(base64, pageIdx + 1, zoom));
     } catch (e) {
+      if (!isMounted.current) return;
       setPreviewHtml('');
     }
   };
@@ -350,7 +355,7 @@ export default function EditPdfScreen() {
             data.data.text,
             data.position.x,
             data.position.y,
-            { size: data.data.fontSize, color: data.data.color }
+            { size: data.data.fontSize, color: data.data.color, font: data.data.fontFamily }
           );
           break;
         case 'image':
@@ -560,7 +565,7 @@ export default function EditPdfScreen() {
         <>
           <Card style={styles.infoCard}>
             <Card.Content>
-              <Text variant="titleMedium">📄 {fileName}</Text>
+              <Text variant="titleMedium">��� {fileName}</Text>
               <Text style={styles.pageCount}>{pages.length} pages</Text>
               {selectedPages.size > 0 && (
                 <Chip style={styles.selectionChip}>
