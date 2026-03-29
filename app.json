@@ -1,33 +1,39 @@
 {
   "expo": {
-    "name": "smart-pdf",
+    "name": "Smart PDF",
     "slug": "smart-pdf",
     "version": "1.0.0",
     "scheme": "smartpdf",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1a1a2e"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.smartpdf.app"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.smartpdf.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow Smart PDF to access your photos",
+        "NSCameraUsageDescription": "Allow Smart PDF to scan documents with camera"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1a1a2e"
       },
       "package": "com.smartpdf.app",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -36,6 +42,12 @@
         {
           "photosPermission": "Allow Smart PDF to access your photos to save scanned documents.",
           "savePhotosPermission": "Allow Smart PDF to save scanned PDFs to your photo library."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Smart PDF to access your camera to scan documents."
         }
       ]
     ]

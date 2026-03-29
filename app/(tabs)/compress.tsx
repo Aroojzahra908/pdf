@@ -77,7 +77,7 @@ export default function CompressScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <Card style={styles.headerCard}>
         <Card.Content>
           <Text variant="titleLarge" style={styles.title}>📦 Compress PDF</Text>
@@ -87,30 +87,30 @@ export default function CompressScreen() {
         </Card.Content>
       </Card>
 
-      <Button 
-        mode="contained" 
-        onPress={pickPdf} 
+      <Button
+        mode="contained"
+        onPress={pickPdf}
         icon="file-pdf-box"
         style={styles.button}
       >
-        {file ? 'Change PDF' : 'Select PDF to Compress'}
+        {file ? 'Change PDF' : 'Select PDF'}
       </Button>
 
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
-          <Text>Compressing PDF...</Text>
+          <ActivityIndicator size="large" color="#ff6b6b" />
+          <Text style={styles.loadingText}>Compressing...</Text>
         </View>
       )}
 
       {file && !loading && (
         <Card style={styles.filesCard}>
           <Card.Content>
-            <Text variant="titleMedium">Selected File</Text>
+            <Text variant="labelLarge">Selected File</Text>
             <View style={styles.fileItem}>
               <View style={styles.fileInfo}>
                 <Text style={styles.fileName}>📄 {file.name}</Text>
-                <Text style={styles.fileSize}>Original size: {formatBytes(file.size)}</Text>
+                <Text style={styles.fileSize}>Size: {formatBytes(file.size)}</Text>
               </View>
             </View>
           </Card.Content>
@@ -120,7 +120,7 @@ export default function CompressScreen() {
       {compressedSize > 0 && (
         <Card style={styles.resultCard}>
           <Card.Content>
-            <Text variant="titleMedium" style={styles.successText}>✓ Compression Complete</Text>
+            <Text variant="labelLarge" style={styles.successText}>✓ Complete</Text>
             <View style={styles.sizeComparison}>
               <View style={styles.sizeItem}>
                 <Text style={styles.sizeLabel}>Original</Text>
@@ -135,20 +135,20 @@ export default function CompressScreen() {
               </View>
             </View>
             <Text style={styles.reductionText}>
-              {Math.round(((originalSize - compressedSize) / originalSize) * 100)}% size reduction
+              {Math.round(((originalSize - compressedSize) / originalSize) * 100)}% smaller
             </Text>
           </Card.Content>
         </Card>
       )}
 
       {file && !loading && (
-        <Button 
-          mode="contained" 
+        <Button
+          mode="contained"
           onPress={handleCompress}
           icon="compress"
           style={styles.actionButton}
         >
-          Compress PDF
+          Compress Now
         </Button>
       )}
     </ScrollView>
@@ -156,31 +156,32 @@ export default function CompressScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, gap: 16, paddingBottom: 40, backgroundColor: '#f8f9fa' },
-  headerCard: { backgroundColor: '#fff3e0', borderRadius: 16 },
-  title: { fontWeight: 'bold', color: '#ff7f50' },
-  subtitle: { opacity: 0.7, marginTop: 4 },
-  button: { borderRadius: 12 },
-  loadingContainer: { alignItems: 'center', gap: 12, paddingVertical: 24 },
-  filesCard: { backgroundColor: '#fff', borderRadius: 12, elevation: 2 },
-  fileItem: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
+  container: { paddingHorizontal: 14, paddingVertical: 12, paddingBottom: 20, backgroundColor: '#1a1a2e' },
+  headerCard: { backgroundColor: '#2d2d44', borderRadius: 14, marginBottom: 14, borderLeftColor: '#ff6b6b', borderLeftWidth: 3 },
+  title: { fontWeight: '700', color: '#ff6b6b' },
+  subtitle: { color: '#b0b0b0', marginTop: 4, fontSize: 13 },
+  button: { borderRadius: 10, marginBottom: 12, backgroundColor: '#ff6b6b' },
+  loadingContainer: { alignItems: 'center', gap: 12, paddingVertical: 32 },
+  loadingText: { color: '#ffffff', fontSize: 13 },
+  filesCard: { backgroundColor: '#2d2d44', borderRadius: 10, elevation: 2, marginBottom: 12 },
+  fileItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginTop: 8,
     paddingVertical: 4
   },
   fileInfo: { flex: 1 },
-  fileName: { flex: 1, fontWeight: '600' },
-  fileSize: { fontSize: 12, opacity: 0.6, marginTop: 4 },
-  resultCard: { backgroundColor: '#f0fff0', borderRadius: 12, elevation: 2 },
-  successText: { color: '#4caf50', fontWeight: 'bold', marginBottom: 12 },
+  fileName: { flex: 1, fontWeight: '600', color: '#ffffff' },
+  fileSize: { fontSize: 12, color: '#b0b0b0', marginTop: 4 },
+  resultCard: { backgroundColor: '#2d2d44', borderRadius: 10, elevation: 2, marginBottom: 12 },
+  successText: { color: '#90EE90', fontWeight: 'bold', marginBottom: 12 },
   sizeComparison: { flexDirection: 'row', alignItems: 'center', marginVertical: 12 },
   sizeItem: { flex: 1, alignItems: 'center' },
-  sizeLabel: { fontSize: 12, opacity: 0.7 },
-  sizeValue: { fontSize: 16, fontWeight: 'bold', color: '#0fb5b1', marginTop: 4 },
+  sizeLabel: { fontSize: 12, color: '#b0b0b0' },
+  sizeValue: { fontSize: 16, fontWeight: 'bold', color: '#90EE90', marginTop: 4 },
   arrowContainer: { alignItems: 'center', marginHorizontal: 8 },
-  arrow: { fontSize: 20, fontWeight: 'bold', color: '#0fb5b1' },
-  reductionText: { textAlign: 'center', fontSize: 14, color: '#4caf50', fontWeight: 'bold' },
-  actionButton: { borderRadius: 12, paddingVertical: 4 }
+  arrow: { fontSize: 20, fontWeight: 'bold', color: '#ff6b6b' },
+  reductionText: { textAlign: 'center', fontSize: 13, color: '#90EE90', fontWeight: '600' },
+  actionButton: { borderRadius: 10, backgroundColor: '#ff6b6b' }
 });
