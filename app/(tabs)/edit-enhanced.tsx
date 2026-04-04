@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { Button, Text, Card, ActivityIndicator, IconButton, SegmentedButtons } from 'react-native-paper';
 import { WebView } from 'react-native-webview';
@@ -40,6 +40,8 @@ export default function EditPdfEnhancedScreen() {
   const [zoom, setZoom] = useState(1);
   const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [previewHtml, setPreviewHtml] = useState<string>('');
+  const isMounted = useRef(true);
+  useEffect(() => () => { isMounted.current = false; }, []);
   
   // Text editing state
   const [selectedFont, setSelectedFont] = useState('TimesNewRomanBold');
@@ -86,20 +88,22 @@ export default function EditPdfEnhancedScreen() {
   </body>
   </html>`;
 
-  const refreshPreview = async (uri: string, pageIdx: number) => {
+  const refreshPreview = useCallback(async (uri: string, pageIdx: number) => {
     try {
       const base64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: 'base64' });
+      if (!isMounted.current) return;
       setPreviewHtml(buildPdfHtml(base64, pageIdx + 1, zoom * 0.4));
     } catch (e) {
+      if (!isMounted.current) return;
       setPreviewHtml('');
     }
-  };
+  }, [zoom, isMounted]);
 
   useEffect(() => {
     if (fileUri) {
       refreshPreview(fileUri, currentPage);
     }
-  }, [fileUri, currentPage, zoom]);
+  }, [fileUri, currentPage, zoom, refreshPreview]);
 
   const pickPdf = async () => {
     try {
